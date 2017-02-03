@@ -2,17 +2,22 @@
 	(:require [cheshire.core :as json]))
 
 (defprotocol ToggleStorage
-	(fetch [this] [this token] "fetches all toggles as a map. optionally fetches the toggles associated with a token. token cannot be nil")
+	(fetch [this] [this token] "fetches all toggles as a map. optionally fetches the toggles associated with a token. token cannot be nil. fetching a token never stored yieds the global, then tht same result until it's stored")
 	(store [this toggles] [this token toggles] "stores all toggles as a map. optionally stores a toggle map. token cannot be nil"))
 
 ; TODO all the validation.... toggles are a kv map not nested, no nils, blah
+
 (defn make-in-memory-toggle-storage []
-	(let [storage (atom {nil {}})]
+	(let [storage (atom {})]
 		(reify ToggleStorage
-			(fetch [this] (get @storage nil))
-		    (fetch [this token] (get @storage token))
-		    (store [this toggles] (swap! storage assoc nil toggles))
-		    (store [this token toggles] (swap! storage assoc token toggles)))))
+			(fetch [this] (get @storage nil {}))
+		    (fetch [this token] (cond
+		    						(nil? (get @storage token)) (fetch
+		    														(store this token (get @storage nil {}))
+		    														token)
+		    						:else (get @storage token {})))
+		    (store [this toggles] (swap! storage assoc nil toggles) this)
+		    (store [this token toggles] (swap! storage assoc token toggles) this))))
 
 
 ; TODO the facade that has the behaviour "cache if token does not exist"
