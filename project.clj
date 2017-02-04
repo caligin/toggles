@@ -7,4 +7,5 @@
                  [ring/ring-core "1.5.0"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [cheshire "5.7.0"]]
-  :main toggles.main)
+  :main toggles.main
+  :profiles {:dev {:dependencies [[clj-http "2.3.0"]]}})
