@@ -2,7 +2,8 @@
 	(:gen-class)
 	(:require [ring.adapter.jetty :as ring-j]
               [ring.middleware.file :as ring-file]
-              [toggles.core :refer :all]))
+              [toggles.core :refer :all])
+	(:import [org.eclipse.jetty.server.handler StatisticsHandler]))
 
 ;; wiring
 
@@ -27,8 +28,18 @@
   		(and (re-matches #"^/[^/]+/?$" uri) (= :put method)) (store-toggles-token request)
   		:default (notfound request))))
 
+(defn configure-graceful-shutdown
+  [server]
+  (let [statistics-handler (StatisticsHandler.)
+  	    default-handler (.getHandler server)]
+    (.setHandler statistics-handler default-handler)
+    (.setHandler server statistics-handler)
+    (.setStopTimeout  server (* 60 1000))
+    (.setStopAtShutdown server true)))
+
+
 (defn -main[]
-	(ring-j/run-jetty dispatch {:port 3000}))
+	(ring-j/run-jetty dispatch {:port 3000  :configurator configure-graceful-shutdown}))
 
 
 ; GET /toggles/ -> map of global toggles

@@ -20,8 +20,6 @@
 		    (store [this token toggles] (swap! storage assoc token toggles) this))))
 
 
-; TODO the facade that has the behaviour "cache if token does not exist"
-
 ; TODO storage implementations for something persistent and possibly clusterable
 
 
