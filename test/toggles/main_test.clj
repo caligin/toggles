@@ -6,6 +6,6 @@
 
 (deftest can-start-webserver
   (let [server (ring-j/run-jetty dispatch {:port 3000 :join? false})]
-  	(testing "can start server"
-  		(is (= 200 (:status (client/get "http://localhost:3000")))))
-  	(.stop server)))
+    (testing "can start server"
+      (is (= 200 (:status (client/get "http://localhost:3000")))))
+    (.stop server)))

@@ -1,9 +1,9 @@
 (ns toggles.main
-	(:gen-class)
-	(:require [ring.adapter.jetty :as ring-j]
-              [ring.middleware.file :as ring-file]
-              [toggles.core :refer :all])
-	(:import [org.eclipse.jetty.server.handler StatisticsHandler]))
+  (:gen-class)
+  (:require [ring.adapter.jetty :as ring-j]
+            [ring.middleware.file :as ring-file]
+            [toggles.core :refer :all])
+  (:import [org.eclipse.jetty.server.handler StatisticsHandler]))
 
 ;; wiring
 
@@ -20,18 +20,17 @@
 ; TODO -> to a make-dispatch that takes pairs of [condition handler]
 (defn dispatch [request]
   (let [uri (:uri request)
-  	    method (:request-method request)]
-  	(cond
-  		(and (re-matches #"^/$" uri) (= :get method)) (fetch-toggles request)
-  		(and (re-matches #"^/$" uri) (= :put method)) (store-toggles request)
-  		(and (re-matches #"^/[^/]+/?$" uri) (= :get method)) (fetch-toggles-token request)
-  		(and (re-matches #"^/[^/]+/?$" uri) (= :put method)) (store-toggles-token request)
-  		:default (notfound request))))
+        method (:request-method request)]
+    (cond
+      (and (re-matches #"^/$" uri) (= :get method)) (fetch-toggles request)
+      (and (re-matches #"^/$" uri) (= :put method)) (store-toggles request)
+      (and (re-matches #"^/[^/]+/?$" uri) (= :get method)) (fetch-toggles-token request)
+      (and (re-matches #"^/[^/]+/?$" uri) (= :put method)) (store-toggles-token request)
+      :default (notfound request))))
 
-(defn configure-graceful-shutdown
-  [server]
+(defn configure-graceful-shutdown [server]
   (let [statistics-handler (StatisticsHandler.)
-  	    default-handler (.getHandler server)]
+        default-handler (.getHandler server)]
     (.setHandler statistics-handler default-handler)
     (.setHandler server statistics-handler)
     (.setStopTimeout  server (* 60 1000))
@@ -39,8 +38,7 @@
 
 
 (defn -main[]
-	(ring-j/run-jetty dispatch {:port 3000  :configurator configure-graceful-shutdown}))
-
+  (ring-j/run-jetty dispatch {:port 3000  :configurator configure-graceful-shutdown}))
 
 ; GET /toggles/ -> map of global toggles
 ; PUT /toggles/ -> sets map of global toggles (should etag to avoid conflict?)
