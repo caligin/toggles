@@ -10,4 +10,5 @@
                  [com.novemberain/monger "3.1.0"]]
   :main toggles.main
   :profiles {:dev {:dependencies [[clj-http "2.3.0"]
-                                  [org.slf4j/slf4j-nop "1.7.12"]]}}) ;to disable mongo driver logging during test runs. maybe there's a more elengant way around this, like configuring slf4j? TODO look it up
+                                  [org.slf4j/slf4j-nop "1.7.12"]  ;to disable mongo driver logging during test runs. maybe there's a more elengant way around this, like configuring slf4j? TODO look it up
+                                  [com.github.fakemongo/fongo "2.0.6"]]}})

@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [toggles.core :refer :all]
             [monger.core :as mg]
-            [monger.collection :as mc]))
+            [monger.collection :as mc])
+  (:import  [com.github.fakemongo Fongo]))
 
 ;TODO how do I make these tests reusable vs multiple impls of proto?
 ;TODO fetch that cannot fetch/store nil
@@ -55,14 +56,9 @@
 (deftest toggle-storage-protocol-inmemory-conformance
   (make-toggle-storage-protocol-tests-for make-in-memory-toggle-storage))
 
-
-; TODO this requires a `docker run --rm -p 27017:27017 mongo` now, find a way to remove the dependency OR automate the spwan of the container
-; TODO eww not closing the connections properly. read about fixtures here https://clojure.github.io/clojure/clojure.test-api.html
+; TODO eww not closing the connections properly. read about fixtures here https://clojure.github.io/clojure/clojure.test-api.html (does it even matter with fongo?)
 (defn make-clean-mongo-storage []
-  (let [
-    conn (mg/connect)]
-    (mg/drop-db conn "toggles-test")
-    (make-mongo-toggle-storage (mg/get-db conn "toggles-test"))))
+    (make-mongo-toggle-storage (.getDB (Fongo. "toggles-test") "test")))
 
 (deftest toggle-storage-protocol-mongo-conformance
   (make-toggle-storage-protocol-tests-for make-clean-mongo-storage))
