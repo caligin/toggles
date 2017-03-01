@@ -21,6 +21,7 @@
     default-config
     (or
       (and
+        (not (nil? config-file))
         (.isFile (java.io.File. config-file))
         (read-string (slurp config-file)))
       {})))
@@ -63,22 +64,24 @@
     (.setStopAtShutdown server true)))
 
 
-(defn -main [config-file]
-  (let [config (load-and-default config-file)
+(defn -main
+  ([] (-main nil))
+  ([config-file]
+    (let [config (load-and-default config-file)
 
-        storage (make-storage config)
+          storage (make-storage config)
 
-        fetch-toggles (make-fetch-toggles-handler storage)
-        fetch-toggles-token (make-fetch-toggles-token-handler storage)
-        store-toggles (make-store-toggles-handler storage)
-        store-toggles-token (make-store-toggles-token-handler storage)
+          fetch-toggles (make-fetch-toggles-handler storage)
+          fetch-toggles-token (make-fetch-toggles-token-handler storage)
+          store-toggles (make-store-toggles-handler storage)
+          store-toggles-token (make-store-toggles-token-handler storage)
 
-        routes [[#"^/$" :get fetch-toggles]
-                [#"^/$" :put store-toggles]
-                [#"^/[^/]+/?$" :get fetch-toggles-token]
-                [#"^/[^/]+/?$" :put store-toggles-token]]]
+          routes [[#"^/$" :get fetch-toggles]
+                  [#"^/$" :put store-toggles]
+                  [#"^/[^/]+/?$" :get fetch-toggles-token]
+                  [#"^/[^/]+/?$" :put store-toggles-token]]]
 
-    (ring-j/run-jetty (make-router routes) {:port (get-in config [:server :port]) :configurator configure-graceful-shutdown})))
+      (ring-j/run-jetty (make-router routes) {:port (get-in config [:server :port]) :configurator configure-graceful-shutdown}))))
 
 ; GET /toggles/ -> map of global toggles
 ; PUT /toggles/ -> sets map of global toggles (should etag to avoid conflict?)
