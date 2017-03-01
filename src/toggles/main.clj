@@ -36,33 +36,22 @@
 
 ; routing stuff
 
-(defn flat-one [sequence]
-  (loop [res '() [form & other] sequence]
-    (cond
-      (nil? form) res
-      :else (recur (concat res form) other))))
 
 ; routes -> '(route)
 ; route -> [url-matcher method handler]
 ; url-matcher -> regex
 ; method -> keyword
 ; hndler -> (fn [request])
-; TODO: this has the limitation that can only be called on a form containing the routes, can't pass in a symbol that resolves to them (unless extra complexity)
-; refactor it with a function, it should be way easier
-(defmacro router [routes]
-  (let [request-sym (gensym 'request)
-        uri-sym (gensym 'uri)
-        method-sym (gensym 'method)]
-    `(fn [~request-sym]
-      (let [~uri-sym (:uri ~request-sym)
-            ~method-sym (:request-method ~request-sym)]
-        (cond
-          ~@(flat-one
-              (map
-                (fn [[url-matcher method handler]]
-                  `((and (re-matches ~url-matcher ~uri-sym) (= ~method ~method-sym)) (~handler ~request-sym)))
-                routes))
-          :default (notfound ~request-sym))))))
+(defn make-router [routes]
+  (fn [{:keys [uri request-method] :as request}]
+    ((nth
+      (first
+        (filter
+          (fn [[url-matcher method _h]]
+            (and (re-matches url-matcher uri) (= method request-method)))
+        routes))
+      2)
+      request)))
 
 
 (defn configure-graceful-shutdown [server]
@@ -74,7 +63,7 @@
     (.setStopAtShutdown server true)))
 
 
-(defn -main[config-file]
+(defn -main [config-file]
   (let [config (load-and-default config-file)
 
         storage (make-storage config)
@@ -84,11 +73,12 @@
         store-toggles (make-store-toggles-handler storage)
         store-toggles-token (make-store-toggles-token-handler storage)
 
-        routes (router [[#"^/$" :get fetch-toggles]
-                        [#"^/$" :put store-toggles]
-                        [#"^/[^/]+/?$" :get fetch-toggles-token]
-                        [#"^/[^/]+/?$" :put store-toggles-token]])]
-    (ring-j/run-jetty routes {:port (get-in config [:server :port]) :configurator configure-graceful-shutdown})))
+        routes [[#"^/$" :get fetch-toggles]
+                [#"^/$" :put store-toggles]
+                [#"^/[^/]+/?$" :get fetch-toggles-token]
+                [#"^/[^/]+/?$" :put store-toggles-token]]]
+
+    (ring-j/run-jetty (make-router routes) {:port (get-in config [:server :port]) :configurator configure-graceful-shutdown})))
 
 ; GET /toggles/ -> map of global toggles
 ; PUT /toggles/ -> sets map of global toggles (should etag to avoid conflict?)
