@@ -3,7 +3,8 @@
   (:require [ring.adapter.jetty :as ring-j]
             [ring.middleware.file :as ring-file]
             [toggles.core :refer :all]
-            [monger.core :as mg])
+            [monger.core :as mg]
+            [monger.credentials :as mcs])
   (:import [org.eclipse.jetty.server.handler StatisticsHandler]))
 
 ;; config
@@ -26,13 +27,29 @@
         (read-string (slurp config-file)))
       {})))
 
-(defn make-storage[config]
+(def default-mongo-config {
+  :type :mongo
+  :nodes [["localhost" 27017]] ; pairs [host port]
+  :options {} ; any permitted by monger.core/mongo-options
+  :credentials [] ; triples [user db pwd]
+  :db "toggles"
+  })
+
+(defn connect-mongo [given-mongo-config]
+  (let [{:keys [nodes options credentials db]} (merge default-mongo-config given-mongo-config)]
+    (mg/get-db
+      (mg/connect
+        (map (partial apply mg/server-address) nodes)
+        (mg/mongo-options options)
+        (map (partial apply mcs/create) credentials))
+      db)))
+
+(defn make-storage[{:keys [storage] :as config}]
   (cond
-    (= :memory (get-in config [:storage :type])) (make-in-memory-toggle-storage)
+    (= :memory (:type storage)) (make-in-memory-toggle-storage)
     ; TODO: heh, what about clean shutdown of the connection? should I pass around an atom where to accumulate things to close?
-    ; alsoalsoalso: configurability, for now it's fixed to localhost:defaultport/toggles
-    (= :mongo (get-in config [:storage :type])) (make-mongo-toggle-storage (mg/get-db (mg/connect) "toggles"))
-    :default (throw (IllegalArgumentException. (str "unknown storage type: " (get-in config [:storage :type]))))))
+    (= :mongo (:type storage)) (make-mongo-toggle-storage (connect-mongo storage))
+    :default (throw (IllegalArgumentException. (str "unknown storage type: " (:type storage))))))
 
 
 ; routing stuff

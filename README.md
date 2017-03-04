@@ -38,7 +38,7 @@ Available keys:
 
 ```
 :storage {
-    :type :memory
+  :type :memory
   }
 ```
 
@@ -48,9 +48,18 @@ No other configuration available. Transient in-memory storage, will reset at shu
 
 ```
 :storage {
-    :type :mongo
+  :type :mongo
+  :nodes []
+  :options {}
+  :credentials []
+  :db ""
   }
 ```
+
+- nodes: addressess in the cluster: a list of pairs `["host" port]`
+- options: a map of mongo options, see [monger docs](http://reference.clojuremongodb.info/monger.core.html#var-mongo-options-builder) for the available keys.
+- credentials: a list of credentials: a list of triples `["user" "db" "pwd"]`
+- db the database name to use, as a string
 
 No other configuration available (coming soon...). MongoDB-backed storage, will try to connect to `localhost:27017`.
 
