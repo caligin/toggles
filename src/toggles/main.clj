@@ -14,7 +14,9 @@
     :type :memory
   }
   :server {
-    :port 3000
+    :port 3443
+    :keystore "keystore.jks"
+    :key-password "correct horse battery staple"
   }})
 
 (defn load-and-default [config-file]
@@ -98,7 +100,13 @@
                   [#"^/[^/]+/?$" :get fetch-toggles-token]
                   [#"^/[^/]+/?$" :put store-toggles-token]]]
 
-      (ring-j/run-jetty (make-router routes) {:port (get-in config [:server :port]) :configurator configure-graceful-shutdown}))))
+      (ring-j/run-jetty (make-router routes) {
+        :ssl-port (get-in config [:server :port])
+        :configurator configure-graceful-shutdown
+        :http? false
+        :ssl? true
+        :keystore (get-in config [:server :keystore])
+        :key-password (get-in config [:server :key-password])}))))
 
 ; GET /toggles/ -> map of global toggles
 ; PUT /toggles/ -> sets map of global toggles (should etag to avoid conflict?)
