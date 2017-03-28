@@ -85,7 +85,7 @@ Port number for the https server, defaults to `3443`.
 
 #### :keystore
 
-Path to the keystore containing certificate and private key. Defaults to "keystore.jks".
+Path to the keystore containing certificate and private key. Defaults to "toggles-localhost.jks".
 
 Running locally via `make run` will generate a keystore with a self-signed certificate.
 

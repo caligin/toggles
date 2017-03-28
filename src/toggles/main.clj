@@ -15,7 +15,7 @@
   }
   :server {
     :port 3443
-    :keystore "keystore.jks"
+    :keystore "toggles-localhost.jks"
     :key-password "correct horse battery staple"
   }})
 

@@ -9,6 +9,6 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
-keystore.jks
+toggles-localhost.jks
 toggles-localhost.crt
 *.swp
